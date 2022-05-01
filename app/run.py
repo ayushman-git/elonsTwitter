@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from utils.geolocation import get_coordinates, is_within_range
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
@@ -15,6 +16,9 @@ class Post(db.Model):
     def __repr__(self):
         return '<Post %r>' % self.id
 
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 @app.route("/")
 def index():
     return {"message": "Hello World!"}
@@ -23,9 +27,15 @@ def index():
 def get_posts():
     lat = request.args.get('lat')
     long = request.args.get('long')
+    lat, long = float(lat), float(long)
+    # return all posts
     posts = Post.query.all()
-    print(posts)
-    return {"posts": posts}
+    result = []
+    for post in posts:
+        coord = get_coordinates(post.location)
+        if is_within_range(lat, long, coord[0], coord[1], 10000):
+            result.append(post.as_dict())
+    return jsonify(result)
 
 @app.route("/post/create", methods=["POST"])
 def create_post():
