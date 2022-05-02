@@ -23,26 +23,36 @@ class Post(db.Model):
 def index():
     return {"message": "Hello World!"}
 
-@app.route("/posts", methods=["GET"])
-def get_posts():
+@app.route('/posts', methods=['GET'], defaults={"page": 1}) 
+@app.route("/posts/<int:page>", methods=["GET"])
+def get_posts(page=1):
+    per_page = 2
+    print(page)
     lat = request.args.get('lat')
     long = request.args.get('long')
     lat, long = float(lat), float(long)
-    # return all posts
-    posts = Post.query.all()
+    posts = Post.query.order_by(Post.date_created).paginate(page,per_page,error_out=False)
+    # posts = Post.query.order_by(Post.date_created).all()
+    print(posts)
     result = []
-    for post in posts:
+    for post in posts.items:
         coord = get_coordinates(post.location)
-        if is_within_range(lat, long, coord[0], coord[1], 10000):
+        if is_within_range(lat, long, coord[0], coord[1], 1000):
             result.append(post.as_dict())
-    return jsonify(result)
+    meta = {
+        "total_pages": posts.pages,
+        "total_posts": posts.total,
+        "current_page": posts.page,
+        "per_page": per_page
+    }
+    return jsonify({'posts': result, 'meta': meta})
 
 @app.route("/post/create", methods=["POST"])
 def create_post():
     text = request.form.get("text")
     location = request.form.get("location")
     post = Post(text=text, location=location)
-
+    print(post.as_dict())
     try:
         db.session.add(post)
         db.session.commit()
