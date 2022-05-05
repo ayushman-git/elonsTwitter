@@ -2,6 +2,11 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from utils.geolocation import get_coordinates, is_within_range
+from decouple import config
+import requests
+import json
+
+API_KEY = config('WEATHER_API_KEY')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
@@ -32,12 +37,11 @@ def get_posts(page=1):
     long = request.args.get('long')
     lat, long = float(lat), float(long)
     posts = Post.query.order_by(Post.date_created).paginate(page,per_page,error_out=False)
-    # posts = Post.query.order_by(Post.date_created).all()
-    print(posts)
     result = []
     for post in posts.items:
         coord = get_coordinates(post.location)
-        if is_within_range(lat, long, coord[0], coord[1], 1000):
+        print(is_within_range(lat, long, coord[0], coord[1], 10000))
+        if is_within_range(lat, long, coord[0], coord[1], 10000):
             result.append(post.as_dict())
     meta = {
         "total_pages": posts.pages,
@@ -45,6 +49,7 @@ def get_posts(page=1):
         "current_page": posts.page,
         "per_page": per_page
     }
+    print(result)
     return jsonify({'posts': result, 'meta': meta})
 
 @app.route("/post/create", methods=["POST"])
@@ -59,6 +64,16 @@ def create_post():
         return {"message": "Post created successfully!"}
     except:
         return {"message": "Something went wrong!"}
+
+
+@app.route("/weather", methods=["GET"])
+def get_weather():
+    lat = request.args.get('lat')
+    long = request.args.get('long')
+    print(lat, long)
+    response_API = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={long}&appid={API_KEY}")
+    data = json.loads(response_API.text)
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
