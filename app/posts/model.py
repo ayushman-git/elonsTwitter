@@ -19,7 +19,6 @@ class Post(db.Model):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def get_posts(lat, long, page=1, per_page = 5):
-        print(page)
         posts = Post.query.order_by(Post.date_created.desc()).paginate(page,per_page,error_out=False)
         result = []
         for post in posts.items:

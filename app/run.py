@@ -5,7 +5,7 @@ from posts.model import db
 from weather.routes import weather_bp
 from posts.routes import post_bp
 
-
+print(__name__)
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 

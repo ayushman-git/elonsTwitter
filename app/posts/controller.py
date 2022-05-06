@@ -16,7 +16,12 @@ def create_post():
   except:
       return {"message": "Something went wrong!"}
 
-def get_posts(page=1):
+def get_posts():
+    page = 1
+    try:
+        page = int(request.args.get("page"))
+    except:
+        pass
     per_page = 2
 
     lat = float(request.args.get('lat'))
