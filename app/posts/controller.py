@@ -17,11 +17,12 @@ def create_post():
 
 def get_posts():
     page = 1
+    per_page = 2
+    
     try:
         page = int(request.args.get("page"))
     except:
         pass
-    per_page = 2
 
     lat = float(request.args.get('lat'))
     long = float(request.args.get('long'))
