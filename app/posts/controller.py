@@ -17,22 +17,9 @@ def create_post():
       return {"message": "Something went wrong!"}
 
 def get_posts(page=1):
-    per_page = 5
-    lat = request.args.get('lat')
-    long = request.args.get('long')
-    lat, long = float(lat), float(long)
-    posts = Post.query.order_by(Post.date_created.desc()).paginate(page,per_page,error_out=False)
-    result = []
-    for post in posts.items:
-        coord = get_coordinates(post.location)
-        print(is_within_range(lat, long, coord[0], coord[1], 10000))
-        if is_within_range(lat, long, coord[0], coord[1], 10000):
-            result.append(post.as_dict())
-    meta = {
-        "total_pages": posts.pages,
-        "total_posts": posts.total,
-        "current_page": posts.page,
-        "per_page": per_page
-    }
-    print(result)
-    return jsonify({'posts': result, 'meta': meta})
+    per_page = 2
+
+    lat = float(request.args.get('lat'))
+    long = float(request.args.get('long'))
+
+    return Post.get_posts(lat, long, page, per_page)
