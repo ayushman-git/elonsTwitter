@@ -1,7 +1,6 @@
-from flask import request, jsonify
+from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from posts.model import Post
-from utils.geolocation import get_coordinates, is_within_range
 
 db = SQLAlchemy()
 
