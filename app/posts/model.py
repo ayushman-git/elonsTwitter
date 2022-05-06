@@ -33,3 +33,12 @@ class Post(db.Model):
             "per_page": per_page
         }
         return jsonify({'posts': result, 'meta': meta})
+    
+    def create_post(text, location):
+        post = Post(text=text, location=location)
+        try:
+            db.session.add(post)
+            db.session.commit()
+            return {"message": "Post created successfully!"}
+        except:
+            return {"message": "Something went wrong!"}

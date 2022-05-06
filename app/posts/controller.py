@@ -7,18 +7,12 @@ db = SQLAlchemy()
 def create_post():
   text = request.form.get("text")
   location = request.form.get("location")
-  post = Post(text=text, location=location)
-  try:
-      db.session.add(post)
-      db.session.commit()
-      return {"message": "Post created successfully!"}
-  except:
-      return {"message": "Something went wrong!"}
+  return Post.create_post(text, location)
 
 def get_posts():
     page = 1
     per_page = 2
-    
+
     try:
         page = int(request.args.get("page"))
     except:
