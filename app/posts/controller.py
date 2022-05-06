@@ -9,7 +9,6 @@ def create_post():
   text = request.form.get("text")
   location = request.form.get("location")
   post = Post(text=text, location=location)
-  print(post.as_dict())
   try:
       db.session.add(post)
       db.session.commit()
@@ -19,7 +18,6 @@ def create_post():
 
 def get_posts(page=1):
     per_page = 5
-    print(page)
     lat = request.args.get('lat')
     long = request.args.get('long')
     lat, long = float(lat), float(long)
