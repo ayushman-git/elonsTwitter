@@ -4,10 +4,16 @@ from posts.model import Post
 
 db = SQLAlchemy()
 
+
+def index():
+    return {"message": "Hello World!"}
+
+
 def create_post():
-  text = request.form.get("text")
-  location = request.form.get("location")
-  return Post.create_post(text, location)
+    text = request.form.get("text")
+    location = request.form.get("location")
+    return Post.create_post(text, location)
+
 
 def get_posts():
     page = 1
