@@ -2,8 +2,9 @@ from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geoalchemy2.types import Geometry
-
+from sqlalchemy import func
 from utils.geolocation import get_coordinates, is_within_range
+from shapely import wkb
 
 db = SQLAlchemy()
 
@@ -21,30 +22,38 @@ class Post(db.Model):
         self.location = location
 
     def __repr__(self):
-        return '<Post %r>' % self.id
+        return '<Post %r>' % self.location
 
+    # def as_dict(self):
+    #     return {c.name: getattr(self, c.name) for c in self.__tablename__.columns}
     def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        d = {}
+        for column in self.__table__.columns:
+            if(column.name == 'location'):
+                d[column.name] = wkb.loads(
+                    bytes(getattr(self, column.name).data))
+            else:
+                d[column.name] = str(getattr(self, column.name))
 
-    def get_posts(lat, long, page=1, per_page=5):
-        # posts = Post.query.order_by(Post.date_created.desc()).paginate(
-        #     page, per_page, error_out=False)
-        posts = Post.query.order_by(Post.date_created.desc()).paginate(
+        return d
+
+    def get_posts(location, page=1, per_page=5):
+        hundred_km = 100 * 10000
+        posts_within_ten_km = Post.query.filter(
+            func.ST_DistanceSphere(Post.location, f'POINT({location})') < hundred_km).order_by(
+            func.ST_DistanceSphere(Post.location, f'POINT({location})')).paginate(
             page, per_page, error_out=False)
-        print(posts.items)
-        # result = []
-        # for post in posts.items:
-        #     coord = get_coordinates(post.location)
-        #     if is_within_range(lat, long, coord[0], coord[1], 10000):
-        #         result.append(post.as_dict())
+        result = []
+        for post in posts_within_ten_km.items:
+            result.append(post.as_dict())
+
         meta = {
-            "total_pages": posts.pages,
-            "total_posts": posts.total,
-            "current_page": posts.page,
+            "total_pages": posts_within_ten_km.pages,
+            "total_posts_within_ten_km": posts_within_ten_km.total,
+            "current_page": posts_within_ten_km.page,
             "per_page": per_page
         }
-        return jsonify({'meta': meta})
-        # return jsonify({'posts': result, 'meta': meta})
+        return jsonify({'meta': meta, 'posts': result})
 
     def create_post(text, location):
         post = Post(text=text, location='POINT({})'.format(location))

@@ -24,7 +24,6 @@ def get_posts():
     except:
         pass
 
-    lat = float(request.args.get('lat'))
-    long = float(request.args.get('long'))
+    location = request.args.get('location')
 
-    return Post.get_posts(lat, long, page, per_page)
+    return Post.get_posts(location, page, per_page)
